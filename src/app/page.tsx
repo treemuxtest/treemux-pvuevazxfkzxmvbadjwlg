@@ -781,19 +781,19 @@ export default function Home() {
         <div className="relative overflow-hidden rounded-[2rem] border border-white/15 bg-black/25 shadow-[0_0_120px_rgba(91,120,255,0.28)]">
           <canvas
             ref={canvasRef}
-            className="block h-[76vh] min-h-[560px] w-full touch-none cursor-crosshair"
+            className="block h-[76vh] min-h-[620px] w-full touch-none cursor-crosshair md:min-h-[560px]"
             aria-label="Interactive exoplanet star map"
           />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_25%,rgba(255,255,255,0.2)_0%,transparent_38%),radial-gradient(circle_at_90%_80%,rgba(255,255,255,0.18)_0%,transparent_40%)] opacity-35" />
 
-          <Card className="absolute right-4 top-4 z-10 w-[min(360px,calc(100%-2rem))] border-white/20 bg-slate-950/70 text-slate-100 backdrop-blur-md">
+          <Card className="absolute inset-x-3 bottom-3 z-10 border-white/20 bg-slate-950/70 text-slate-100 backdrop-blur-md md:inset-x-auto md:bottom-auto md:right-4 md:top-4 md:w-[360px]">
             <CardHeader className="pb-3">
               <CardTitle className="font-[family-name:var(--font-syne)] text-2xl tracking-tight">
                 {selectedSystem.name}
               </CardTitle>
               <p className="text-sm text-slate-300">{selectedSystem.summary}</p>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="max-h-[44vh] space-y-4 overflow-y-auto pr-1 md:max-h-none">
               <div className="grid grid-cols-3 gap-2 text-xs uppercase tracking-[0.18em] text-slate-300">
                 <div className="rounded-xl border border-white/15 bg-white/5 p-2">
                   <p>Distance</p>
@@ -836,7 +836,7 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          <div className="absolute bottom-4 left-4 z-10 rounded-2xl border border-white/15 bg-slate-950/70 px-3 py-2 text-xs text-slate-200 backdrop-blur-sm">
+          <div className="absolute bottom-4 left-4 z-10 hidden rounded-2xl border border-white/15 bg-slate-950/70 px-3 py-2 text-xs text-slate-200 backdrop-blur-sm sm:block">
             <p className="font-medium text-white">Navigation</p>
             <p className="mt-1">Move pointer to probe systems. Click to lock details.</p>
           </div>
