@@ -242,6 +242,9 @@ export function SolarStory() {
     let width = 0;
     let height = 0;
     let animationFrame = 0;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const motionFactor = reduceMotion ? 0.3 : 1;
+    const driftFactor = reduceMotion ? 0 : 1;
 
     const initStars = () => {
       const count = Math.max(90, Math.round((width * height) / 10000));
@@ -343,7 +346,7 @@ export function SolarStory() {
       context.fillRect(0, 0, width, height);
 
       starsRef.current.forEach((star, index) => {
-        const shimmer = 0.5 + 0.5 * Math.sin(seconds * 0.5 + index * 0.18);
+        const shimmer = reduceMotion ? 1 : 0.5 + 0.5 * Math.sin(seconds * 0.5 + index * 0.18);
         context.fillStyle = `rgba(233,240,255,${star.alpha * shimmer})`;
         context.beginPath();
         context.arc(star.x, star.y, star.size, 0, Math.PI * 2);
@@ -371,7 +374,7 @@ export function SolarStory() {
           context.ellipse(centerX, centerY, orbitRadius, orbitRadius * 0.48, 0, 0, Math.PI * 2);
           context.stroke();
 
-          const targetAngle = seconds * (280 / planet.orbitDays) * Math.PI * 2 + index * 0.35;
+          const targetAngle = seconds * (280 / planet.orbitDays) * Math.PI * 2 * motionFactor + index * 0.35;
           const targetX = centerX + Math.cos(targetAngle) * orbitRadius;
           const targetY = centerY + Math.sin(targetAngle) * orbitRadius * 0.48;
           const targetR = clamp(2.7 + Math.pow(planet.diameterKm / EARTH_DIAMETER, 0.33) * 5, 3, 14);
@@ -379,7 +382,7 @@ export function SolarStory() {
           const state = statesRef.current[index];
           state.x = lerp(state.x || targetX, targetX, 0.1);
           state.y = lerp(state.y || targetY, targetY, 0.1);
-          state.r = lerp(state.r || targetR, targetR, 0.16);
+          state.r = lerp(state.r || targetR, targetR, 0.16 - 0.06 * (1 - motionFactor));
 
           projectedRef.current[index] = { ...state };
         });
@@ -425,7 +428,7 @@ export function SolarStory() {
         drawAxisTicks(mode, axisStart, axisEnd, axisY);
 
         if (mode === "light") {
-          const pulseProgress = (seconds * 0.2) % 1;
+          const pulseProgress = reduceMotion ? 0.12 : (seconds * 0.2) % 1;
           const pulseX = axisStart + pulseProgress * (axisEnd - axisStart);
 
           context.strokeStyle = "rgba(138,207,255,0.7)";
@@ -446,25 +449,25 @@ export function SolarStory() {
 
           if (mode === "distance") {
             targetX = scaleLog(planet.distanceAU, DISTANCE_MIN, DISTANCE_MAX, axisStart, axisEnd);
-            targetY = axisY + Math.sin(seconds * 0.9 + index * 0.7) * 4;
+            targetY = axisY + Math.sin(seconds * 0.9 * motionFactor + index * 0.7) * 4 * driftFactor;
             targetR = clamp(2 + Math.pow(diameterRatio, 0.34) * 3.4, 3, 11);
           }
 
           if (mode === "size") {
             targetX = scaleLinear(diameterRatio, 0.8, 11.5, axisStart, axisEnd);
-            targetY = axisY - Math.cos(seconds * 0.75 + index) * 8;
+            targetY = axisY - Math.cos(seconds * 0.75 * motionFactor + index) * 8 * driftFactor;
             targetR = clamp(Math.pow(diameterRatio, 0.42) * 14, 5, 66);
           }
 
           if (mode === "light") {
             targetX = scaleLinear(lightMinutes, 0, DISTANCE_MAX * 8.317, axisStart, axisEnd);
-            targetY = axisY + Math.sin(seconds * 0.8 + index * 0.45) * 3;
+            targetY = axisY + Math.sin(seconds * 0.8 * motionFactor + index * 0.45) * 3 * driftFactor;
             targetR = clamp(2 + Math.pow(diameterRatio, 0.35) * 3.8, 3, 12);
           }
 
           if (mode === "pocket") {
             targetX = scaleLinear(metersFromEarth, -2.5, 120, axisStart, axisEnd);
-            targetY = axisY - Math.cos(seconds * 1.05 + index * 0.9) * 4;
+            targetY = axisY - Math.cos(seconds * 1.05 * motionFactor + index * 0.9) * 4 * driftFactor;
             targetR = clamp(2 + Math.pow(diameterRatio, 0.33) * 3, 2.5, 10);
           }
 
@@ -598,7 +601,7 @@ export function SolarStory() {
 
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_12%,rgba(255,239,198,0.1),transparent_45%),radial-gradient(circle_at_80%_15%,rgba(127,178,255,0.2),transparent_40%)]" />
 
-          <div className="pointer-events-none absolute left-5 top-6 z-20 max-w-sm md:left-10 md:top-9">
+          <div className="pointer-events-none absolute left-5 top-6 z-20 max-w-[20rem] md:left-10 md:top-9 md:max-w-sm">
             <p className="text-xs tracking-[0.32em] text-[#8ec4ff] uppercase">Interactive Explainer</p>
             <h1 className="mt-3 font-display text-4xl leading-[0.96] text-[#fffbef] md:text-6xl">
               The Solar System
@@ -610,13 +613,26 @@ export function SolarStory() {
             </p>
           </div>
 
-          <div className="pointer-events-none absolute right-5 top-6 z-20 w-[300px] rounded-2xl border border-white/20 bg-[#0a2840]/78 p-5 shadow-xl backdrop-blur-md md:right-10 md:top-9">
+          <div className="pointer-events-none absolute bottom-5 left-5 right-5 z-20 rounded-2xl border border-white/20 bg-[#0a2840]/78 p-5 shadow-xl backdrop-blur-md md:bottom-auto md:left-auto md:right-10 md:top-9 md:w-[300px]">
             <p className="text-xs tracking-[0.2em] text-[#8dc9ff] uppercase">Focus</p>
             <h3 className="mt-1 font-display text-3xl text-[#fffdf4]">{focusPlanet.name}</h3>
             <p className="mt-2 text-sm leading-6 text-[#dce9f8]">{focusPlanet.fact}</p>
             <p className="mt-3 text-sm text-[#b9d7fa]">Distance: {focusPlanet.distanceAU.toFixed(2)} AU</p>
             <p className="text-sm text-[#b9d7fa]">Sunlight delay: {focusLightMinutes.toFixed(1)} minutes</p>
             <p className="text-sm text-[#b9d7fa]">Orbital period: {(focusPlanet.orbitDays / 365).toFixed(2)} Earth years</p>
+          </div>
+
+          <div className="pointer-events-none absolute bottom-8 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/20 bg-[#08253c]/75 px-4 py-2 shadow-lg backdrop-blur-md md:bottom-10">
+            <div className="flex items-center gap-2">
+              {CHAPTERS.map((chapter, index) => (
+                <div
+                  key={chapter.title}
+                  className={`h-2.5 rounded-full transition-all duration-300 ${
+                    activeChapter === index ? "w-7 bg-[#9dd2ff]" : "w-2.5 bg-[#6d8fae]"
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
